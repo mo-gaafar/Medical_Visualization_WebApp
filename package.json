@@ -1,0 +1,29 @@
+{
+  "name": "medical_visualization_webapp",
+  "version": "1.0.0",
+  "description": "This is a  Web GUI application that does 3D visualization of DICOM series Using VTK.js library.",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack --progress --mode=development",
+    "start": "webpack serve --progress --mode=development --static=dist",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mo-gaafar/Medical_Visualization_WebApp.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mo-gaafar/Medical_Visualization_WebApp/issues"
+  },
+  "homepage": "https://github.com/mo-gaafar/Medical_Visualization_WebApp#readme",
+  "dependencies": {
+    "@kitware/vtk.js": "^24.13.1"
+  },
+  "devDependencies": {
+    "webpack": "^5.72.1",
+    "webpack-cli": "^4.9.2",
+    "webpack-dev-server": "^4.9.0"
+  }
+}
