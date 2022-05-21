@@ -206,7 +206,7 @@ function getCroppingPlanes(imageData, ijkPlanes) {
   ];
 }
 
-reader.setUrl(`https://kitware.github.io/vtk-js/data/volume/headsq.vti`).then(() => {
+reader.setUrl(`https://kitware.github.io/vtk-js/data/volume/LIDC2.vti`).then(() => {
   reader.loadData().then(() => {
     const image = reader.getOutputData();
 
