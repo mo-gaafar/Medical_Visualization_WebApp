@@ -19,7 +19,7 @@
   },
   "homepage": "https://github.com/mo-gaafar/Medical_Visualization_WebApp#readme",
   "dependencies": {
-    "@kitware/vtk.js": "^24.13.1"
+    "@kitware/vtk.js": "^24.14.0"
   },
   "devDependencies": {
     "webpack": "^5.72.1",
