@@ -59,7 +59,7 @@ const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 marchingCube.setInputConnection(reader.getOutputPort());
 
 reader
-  .setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`, { loadData: true })
+  .setUrl(`https://kitware.github.io/vtk-js/data/volume/headsq.vti`, { loadData: true })
   .then(() => {
     const data = reader.getOutputData();
     const dataRange = data.getPointData().getScalars().getRange();
