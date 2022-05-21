@@ -1,90 +1,84 @@
+import '@kitware/vtk.js/favicon';
+
+// Load the rendering pieces we want to use (for both WebGL and WebGPU)
 import '@kitware/vtk.js/Rendering/Profiles/Geometry';
 
+// Force DataAccessHelper to have access to various data source
+import '@kitware/vtk.js/IO/Core/DataAccessHelper/HtmlDataAccessHelper';
+import '@kitware/vtk.js/IO/Core/DataAccessHelper/HttpDataAccessHelper';
+import '@kitware/vtk.js/IO/Core/DataAccessHelper/JSZipDataAccessHelper';
+
+import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkFullScreenRenderWindow from '@kitware/vtk.js/Rendering/Misc/FullScreenRenderWindow';
+import vtkHttpDataSetReader from '@kitware/vtk.js/IO/Core/HttpDataSetReader';
+import vtkImageMarchingCubes from '@kitware/vtk.js/Filters/General/ImageMarchingCubes';
+import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 
-import vtkActor           from '@kitware/vtk.js/Rendering/Core/Actor';
-import vtkMapper          from '@kitware/vtk.js/Rendering/Core/Mapper';
-import vtkCalculator      from '@kitware/vtk.js/Filters/General/Calculator';
-import vtkConeSource      from '@kitware/vtk.js/Filters/Sources/ConeSource';
-import { AttributeTypes } from '@kitware/vtk.js/Common/DataModel/DataSetAttributes/Constants';
-import { FieldDataTypes } from '@kitware/vtk.js/Common/DataModel/DataSet/Constants';
+//import controlPanel from './controller.html';
 
-const controlPanel = `
-<table>
+const controlPanel = `<table>
+<tbody>
   <tr>
+    <td>Iso value</td>
     <td>
-      <select class="representations" style="width: 100%">
-        <option value="0">Points</option>
-        <option value="1">Wireframe</option>
-        <option value="2" selected>Surface</option>
-      </select>
+      <input class="isoValue" type="range" min="0" max="3926" step="0.05" value="1308.6666666666667">
     </td>
   </tr>
-  <tr>
-    <td>
-      <input class="resolution" type="range" min="4" max="80" value="6" />
-    </td>
-  </tr>
-</table>
-`;
+</tbody>
+</table>`;
 
-// ----------------------------------------------------------------------------
-// Standard rendering code setup
-// ----------------------------------------------------------------------------
 
-const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance();
-const renderer = fullScreenRenderer.getRenderer();
-const renderWindow = fullScreenRenderer.getRenderWindow();
 
-// ----------------------------------------------------------------------------
-// Example code
-// ----------------------------------------------------------------------------
 
-const coneSource = vtkConeSource.newInstance({ height: 1.0 });
-const filter = vtkCalculator.newInstance();
-
-filter.setInputConnection(coneSource.getOutputPort());
-filter.setFormula({
-  getArrays: inputDataSets => ({
-    input: [],
-    output: [
-      { location: FieldDataTypes.CELL, name: 'Random', dataType: 'Float32Array', attribute: AttributeTypes.SCALARS },
-    ],
-  }),
-  evaluate: (arraysIn, arraysOut) => {
-    const [scalars] = arraysOut.map(d => d.getData());
-    for (let i = 0; i < scalars.length; i++) {
-      scalars[i] = Math.random();
-    }
-  },
+const fullScreenRenderWindow = vtkFullScreenRenderWindow.newInstance({
+  background: [0, 0, 0],
 });
+const renderWindow = fullScreenRenderWindow.getRenderWindow();
+const renderer = fullScreenRenderWindow.getRenderer();
 
-const mapper = vtkMapper.newInstance();
-mapper.setInputConnection(filter.getOutputPort());
+fullScreenRenderWindow.addController(controlPanel);
 
 const actor = vtkActor.newInstance();
+const mapper = vtkMapper.newInstance();
+const marchingCube = vtkImageMarchingCubes.newInstance({
+  contourValue: 0.0,
+  computeNormals: true,
+  mergePoints: true,
+});
+
 actor.setMapper(mapper);
+mapper.setInputConnection(marchingCube.getOutputPort());
 
-renderer.addActor(actor);
-renderer.resetCamera();
-renderWindow.render();
-
-// -----------------------------------------------------------
-// UI control handling
-// -----------------------------------------------------------
-
-fullScreenRenderer.addController(controlPanel);
-const representationSelector = document.querySelector('.representations');
-const resolutionChange = document.querySelector('.resolution');
-
-representationSelector.addEventListener('change', (e) => {
-  const newRepValue = Number(e.target.value);
-  actor.getProperty().setRepresentation(newRepValue);
+function updateIsoValue(e) {
+  const isoValue = Number(e.target.value);
+  marchingCube.setContourValue(isoValue);
   renderWindow.render();
-});
+}
 
-resolutionChange.addEventListener('input', (e) => {
-  const resolution = Number(e.target.value);
-  coneSource.setResolution(resolution);
-  renderWindow.render();
-});
+const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
+marchingCube.setInputConnection(reader.getOutputPort());
+
+reader
+  .setUrl(`${__BASE_PATH__}/data/volume/headsq.vti`, { loadData: true })
+  .then(() => {
+    const data = reader.getOutputData();
+    const dataRange = data.getPointData().getScalars().getRange();
+    const firstIsoValue = (dataRange[0] + dataRange[1]) / 3;
+
+    const el = document.querySelector('.isoValue');
+    el.setAttribute('min', dataRange[0]);
+    el.setAttribute('max', dataRange[1]);
+    el.setAttribute('value', firstIsoValue);
+    el.addEventListener('input', updateIsoValue);
+
+    marchingCube.setContourValue(firstIsoValue);
+    renderer.addActor(actor);
+    renderer.getActiveCamera().set({ position: [1, 1, 0], viewUp: [0, 0, -1] });
+    renderer.resetCamera();
+    renderWindow.render();
+  });
+
+global.fullScreen = fullScreenRenderWindow;
+global.actor = actor;
+global.mapper = mapper;
+global.marchingCube = marchingCube;
