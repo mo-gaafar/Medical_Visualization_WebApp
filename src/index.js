@@ -103,6 +103,7 @@ const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
 });
 const renderer = fullScreenRenderer.getRenderer();
 const renderWindow = fullScreenRenderer.getRenderWindow();
+  const apiRenderWindow = fullScreenRenderer.getApiSpecificRenderWindow()
 
 renderWindow.getInteractor().setDesiredUpdateRate(15.0);
 //......
