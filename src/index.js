@@ -40,9 +40,6 @@ const controlPanel=`<table>
     <td> 
       <button id="visualizehead">Visualize Head</button>
     </td>
-    <td> 
-      <button id="visualizegaussian">Visualize Gaussian</button>
-    </td>
   </tr> 
   <tr>
     <td>pickable</td>
@@ -109,26 +106,7 @@ const renderWindow = fullScreenRenderer.getRenderWindow();
   const apiRenderWindow = fullScreenRenderer.getApiSpecificRenderWindow()
 
 renderWindow.getInteractor().setDesiredUpdateRate(15.0);
-//......
 
-//const fullScreenRenderWindow = vtkFullScreenRenderWindow.newInstance({
-    //background: [0, 0, 0],
-  //});
-  //const renderWindow = fullScreenRenderWindow.getRenderWindow();
-  //const renderer = fullScreenRenderWindow.getRenderer();
-  
-  //fullScreenRenderWindow.addController(controlPanel1);
-  
- // const actor1 = vtkActor.newInstance();
-  //const mapper1 = vtkMapper.newInstance();
-  //const marchingCube1 = vtkImageMarchingCubes.newInstance({
-    //contourValue: 0.0,
-    //computeNormals: true,
-    //mergePoints: true,
- // });
-  // 2D overlay rendering
-  // ----------------------------------------------------------------------------
-  
   const overlaySize = 15;
   const overlayBorder = 2;
   const overlay = document.createElement('div');
@@ -180,17 +158,43 @@ renderWindow.getInteractor().setDesiredUpdateRate(15.0);
   
   // Initial widget register
   widgetRegistration();
-  
+  const gaussianWidget = vtkPiecewiseGaussianWidget.newInstance({
+  numberOfBins: 256,
+  size: [400, 150],
+});
+gaussianWidget.updateStyle({
+  backgroundColor: 'rgba(255, 255, 255, 0.6)',
+  histogramColor: 'rgba(100, 100, 100, 0.5)',
+  strokeColor: 'rgb(0, 0, 0)',
+  activeColor: 'rgb(255, 255, 255)',
+  handleColor: 'rgb(50, 150, 50)',
+  buttonDisableFillColor: 'rgba(255, 255, 255, 0.5)',
+  buttonDisableStrokeColor: 'rgba(0, 0, 0, 0.5)',
+  buttonStrokeColor: 'rgba(0, 0, 0, 1)',
+  buttonFillColor: 'rgba(255, 255, 255, 1)',
+  strokeWidth: 2,
+  activeStrokeWidth: 3,
+  buttonStrokeWidth: 1.5,
+  handleWidth: 3,
+  iconSize: 20, // Can be 0 if you want to remove buttons (dblClick for (+) / rightClick for (-))
+  padding: 10,
+});
+
+fullScreenRenderer.setResizeCallback(({ width, height }) => {
+  gaussianWidget.setSize(Math.min(450, width - 10), 150);
+});
+
+const piecewiseFunction = vtkPiecewiseFunction.newInstance();
   // ----------------------------------------------------------------------------
   // Volume rendering
   // ----------------------------------------------------------------------------
   
-  const reader2 = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
+  const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
   
-  const actor2 = vtkVolume.newInstance();
-  const mapper2 = vtkVolumeMapper.newInstance();
-  mapper2.setSampleDistance(1.1);
-  actor2.setMapper(mapper2);
+  const actor = vtkVolume.newInstance();
+  const mapper = vtkVolumeMapper.newInstance();
+  mapper.setSampleDistance(1.1);
+  actor.setMapper(mapper);
   
   // create color and opacity transfer functions
   const ctfun = vtkColorTransferFunction.newInstance();
@@ -201,23 +205,80 @@ renderWindow.getInteractor().setDesiredUpdateRate(15.0);
   const ofun = vtkPiecewiseFunction.newInstance();
   ofun.addPoint(0.0, 0.0);
   ofun.addPoint(255.0, 1.0);
-  actor2.getProperty().setRGBTransferFunction(0, ctfun);
-  actor2.getProperty().setScalarOpacity(0, ofun);
-  actor2.getProperty().setScalarOpacityUnitDistance(0, 3.0);
-  actor2.getProperty().setInterpolationTypeToLinear();
-  actor2.getProperty().setUseGradientOpacity(0, true);
-  actor2.getProperty().setGradientOpacityMinimumValue(0, 2);
-  actor2.getProperty().setGradientOpacityMinimumOpacity(0, 0.0);
-  actor2.getProperty().setGradientOpacityMaximumValue(0, 20);
-  actor2.getProperty().setGradientOpacityMaximumOpacity(0, 1.0);
-  actor2.getProperty().setShade(true);
-  actor2.getProperty().setAmbient(0.2);
-  actor2.getProperty().setDiffuse(0.7);
-  actor2.getProperty().setSpecular(0.3);
-  actor2.getProperty().setSpecularPower(8.0);
+  actor.getProperty().setRGBTransferFunction(0, ctfun);
+  actor.getProperty().setScalarOpacity(0, ofun);
+  actor.getProperty().setScalarOpacityUnitDistance(0, 3.0);
+  actor.getProperty().setInterpolationTypeToLinear();
+  actor.getProperty().setUseGradientOpacity(0, true);
+  actor.getProperty().setGradientOpacityMinimumValue(0, 2);
+  actor.getProperty().setGradientOpacityMinimumOpacity(0, 0.0);
+  actor.getProperty().setGradientOpacityMaximumValue(0, 20);
+  actor.getProperty().setGradientOpacityMaximumOpacity(0, 1.0);
+  actor.getProperty().setShade(true);
+  actor.getProperty().setAmbient(0.2);
+  actor.getProperty().setDiffuse(0.7);
+  actor.getProperty().setSpecular(0.3);
+  actor.getProperty().setSpecularPower(8.0);
   
-  mapper2.setInputConnection(reader2.getOutputPort());
+  mapper.setInputConnection(reader.getOutputPort());
   
+  const body = rootContainer || document.querySelector('body');
+
+// Create Widget container
+const widgetContainer = document.createElement('div');
+widgetContainer.style.position = 'absolute';
+widgetContainer.style.top = 'calc(10px + 1em)';
+widgetContainer.style.left = '5px';
+widgetContainer.style.background = 'rgba(255, 255, 255, 0.3)';
+widgetContainer.style.marginLeft = '1300px';
+body.appendChild(widgetContainer);
+
+// Create Label for preset
+const labelContainer = document.createElement('div');
+labelContainer.style.position = 'absolute';
+labelContainer.style.top = '5px';
+labelContainer.style.left = '5px';
+labelContainer.style.width = '100%';
+labelContainer.style.color = 'white';
+labelContainer.style.textAlign = 'center';
+labelContainer.style.userSelect = 'none';
+labelContainer.style.cursor = 'pointer';
+body.appendChild(labelContainer);
+
+let presetIndex = 1;
+const globalDataRange = [0, 255];
+const lookupTable = vtkColorTransferFunction.newInstance();
+
+function changePreset(delta = 1) {
+  presetIndex =
+    (presetIndex + delta + vtkColorMaps.rgbPresetNames.length) %
+    vtkColorMaps.rgbPresetNames.length;
+  lookupTable.applyColorMap(
+    vtkColorMaps.getPresetByName(vtkColorMaps.rgbPresetNames[presetIndex])
+  );
+  lookupTable.setMappingRange(...globalDataRange);
+  lookupTable.updateRange();
+  labelContainer.innerHTML = vtkColorMaps.rgbPresetNames[presetIndex];
+}
+
+let intervalID = null;
+function stopInterval() {
+  if (intervalID !== null) {
+    clearInterval(intervalID);
+    intervalID = null;
+  }
+}
+
+labelContainer.addEventListener('click', (event) => {
+  if (event.pageX < 200) {
+    stopInterval();
+    changePreset(-1);
+  } else {
+    stopInterval();
+    changePreset(1);
+  }
+});
+
   // -----------------------------------------------------------
   // Get data
   // -----------------------------------------------------------
@@ -249,30 +310,74 @@ renderWindow.getInteractor().setDesiredUpdateRate(15.0);
     ];
   }
   
-  reader2.setUrl(`https://kitware.github.io/vtk-js/data/volume/LIDC2.vti`).then(() => {
-    reader2.loadData().then(() => {
-      const image = reader2.getOutputData();
-  
+  reader.setUrl(`https://kitware.github.io/vtk-js/data/volume/LIDC2.vti`).then(() => {
+    reader.loadData().then(() => {
+      const imageData = reader.getOutputData();
+      const dataArray = imageData.getPointData().getScalars();
+      const dataRange = dataArray.getRange();
+      globalDataRange[0] = dataRange[0];
+      globalDataRange[1] = dataRange[1];
+      // Update Lookup table
+      changePreset();
+      gaussianWidget.setDataArray(dataArray.getData());
+      gaussianWidget.applyOpacity(piecewiseFunction);
       // update crop widget
-      widget.copyImageDataDescription(image);
+      widget.copyImageDataDescription(imageData);
       const cropState = widget.getWidgetState().getCroppingPlanes();
       cropState.onModified(() => {
-        const planes = getCroppingPlanes(image, cropState.getPlanes());
-        mapper2.removeAllClippingPlanes();
+        const planes = getCroppingPlanes(imageData, cropState.getPlanes());
+        mapper.removeAllClippingPlanes();
         planes.forEach((plane) => {
-          mapper2.addClippingPlane(plane);
+          mapper.addClippingPlane(plane);
         });
-        mapper2.modified();
+        mapper.modified();
       });
+          lookupTable.onModified(() => {
+      gaussianWidget.render();
+      renderWindow.render();
+    });
+      
   
       // add volume to renderer
-      renderer.addVolume(actor2);
+      renderer.addVolume(actor);
       renderer.resetCamera();
       renderer.resetCameraClippingRange();
+      renderer.getActiveCamera().elevation(70);
       renderWindow.render();
     });
   });
   
+// ----------------------------------------------------------------------------
+// Default setting Piecewise function gaussianWidget
+// ----------------------------------------------------------------------------
+
+gaussianWidget.addGaussian(0.425, 0.5, 0.2, 0.3, 0.2);
+gaussianWidget.addGaussian(0.75, 1, 0.3, 0, 0);
+
+gaussianWidget.setContainer(widgetContainer);
+gaussianWidget.bindMouseListeners();
+
+gaussianWidget.onAnimation((start) => {
+  if (start) {
+    renderWindow.getInteractor().requestAnimation(gaussianWidget);
+  } else {
+    renderWindow.getInteractor().cancelAnimation(gaussianWidget);
+  }
+});
+
+gaussianWidget.onOpacityChange(() => {
+  gaussianWidget.applyOpacity(piecewiseFunction);
+  if (!renderWindow.getInteractor().isAnimating()) {
+    renderWindow.render();
+  }
+});
+
+  actor.getProperty().setRGBTransferFunction(0, lookupTable);
+actor.getProperty().setScalarOpacity(0, piecewiseFunction);
+actor.getProperty().setInterpolationTypeToFastLinear();
+
+
+
   // -----------------------------------------------------------
   // UI control handling
   // -----------------------------------------------------------
@@ -298,8 +403,13 @@ renderWindow.getInteractor().setDesiredUpdateRate(15.0);
     buttons[i].addEventListener('click', widgetRegistration);
   }
 
+  // ----------------------------------------------------------------------------
+// Expose variable to global namespace
+// ----------------------------------------------------------------------------
+
+  global.gaussianWidget = gaussianWidget;
+
   document.querySelector("#visualizehead").addEventListener("click", Head)
-  document.querySelector("#visualizegaussian").addEventListener("click", Gaussian)
 
 }
 
@@ -314,9 +424,6 @@ renderWindow.getInteractor().setDesiredUpdateRate(15.0);
     </td>
     <td> 
       <button id="visualizehead">Visualize Head</button>
-    </td>
-    <td> 
-      <button id="visualizegaussian">Visualize Gaussian</button>
     </td>
   </tr> 
   <tr>
@@ -376,10 +483,7 @@ reader
   })
 
    document.querySelector("#visualizechest").addEventListener("click", chest)
-   document.querySelector("#visualizegaussian").addEventListener("click", Gaussian)
-
 }
-
 function Gaussian() {
     document.body.innerHTML = ""
   const controlPanel=`<table>
@@ -391,166 +495,36 @@ function Gaussian() {
     <td> 
       <button id="visualizehead">Visualize Head</button>
     </td>
-    <td> 
-      <button id="visualizegaussian">Visualize Gaussian</button>
-    </td>
   </tr> 
   <tr>
   </tr>
 </table>`; 
   
-  // ----------------------------------------------------------------------------
-// Standard rendering code setup
-// ----------------------------------------------------------------------------
-
-const rootContainer = document.querySelector(
-  '.vtk-js-example-piecewise-gaussian-widget'
-);
-const containerStyle = rootContainer ? { height: '100%' } : null;
-const urlToLoad = rootContainer
-  ? rootContainer.dataset.url ||
-    'https://kitware.github.io/vtk-js/data/volume/LIDC2.vti'
-    : `https://kitware.github.io/vtk-js/data/volume/LIDC2.vti`;
-  
-    const fullScreenRenderer = vtkFullScreenRenderWindow.newInstance({
-      background: [0, 0, 0],
-      rootContainer,
-      containerStyle,
-    });
-    const renderer = fullScreenRenderer.getRenderer();
-    const renderWindow = fullScreenRenderer.getRenderWindow();
-    renderWindow.getInteractor().setDesiredUpdateRate(15.0);
-    fullScreenRenderer.addController(controlPanel);
-    
-    
-    // const actor = vtkActor.newInstance();
-    // const mapper = vtkMapper.newInstance();
-    // const marchingCube = vtkImageMarchingCubes.newInstance({
-//   contourValue: 0.0,
-//   computeNormals: true,
-//   mergePoints: true,
-// });
-const body = rootContainer || document.querySelector('body');
-
-// Create Widget container
-const widgetContainer = document.createElement('div');
-widgetContainer.style.position = 'absolute';
-widgetContainer.style.top = 'calc(10px + 1em)';
-widgetContainer.style.left = '5px';
-widgetContainer.style.background = 'rgba(255, 255, 255, 0.3)';
-widgetContainer.style.marginLeft = '1300px';
-body.appendChild(widgetContainer);
-
-// Create Label for preset
-const labelContainer = document.createElement('div');
-labelContainer.style.position = 'absolute';
-labelContainer.style.top = '5px';
-labelContainer.style.left = '5px';
-labelContainer.style.width = '100%';
-labelContainer.style.color = 'white';
-labelContainer.style.textAlign = 'center';
-labelContainer.style.userSelect = 'none';
-labelContainer.style.cursor = 'pointer';
-body.appendChild(labelContainer);
-
-let presetIndex = 1;
-const globalDataRange = [0, 255];
-const lookupTable = vtkColorTransferFunction.newInstance();
-
-function changePreset(delta = 1) {
-  presetIndex =
-    (presetIndex + delta + vtkColorMaps.rgbPresetNames.length) %
-    vtkColorMaps.rgbPresetNames.length;
-  lookupTable.applyColorMap(
-    vtkColorMaps.getPresetByName(vtkColorMaps.rgbPresetNames[presetIndex])
-  );
-  lookupTable.setMappingRange(...globalDataRange);
-  lookupTable.updateRange();
-  labelContainer.innerHTML = vtkColorMaps.rgbPresetNames[presetIndex];
-}
-
-let intervalID = null;
-function stopInterval() {
-  if (intervalID !== null) {
-    clearInterval(intervalID);
-    intervalID = null;
-  }
-}
-
-labelContainer.addEventListener('click', (event) => {
-  if (event.pageX < 200) {
-    stopInterval();
-    changePreset(-1);
-  } else {
-    stopInterval();
-    changePreset(1);
-  }
-});
 
 // ----------------------------------------------------------------------------
 // Example code
 // ----------------------------------------------------------------------------
 
-const widget = vtkPiecewiseGaussianWidget.newInstance({
-  numberOfBins: 256,
-  size: [400, 150],
-});
-widget.updateStyle({
-  backgroundColor: 'rgba(255, 255, 255, 0.6)',
-  histogramColor: 'rgba(100, 100, 100, 0.5)',
-  strokeColor: 'rgb(0, 0, 0)',
-  activeColor: 'rgb(255, 255, 255)',
-  handleColor: 'rgb(50, 150, 50)',
-  buttonDisableFillColor: 'rgba(255, 255, 255, 0.5)',
-  buttonDisableStrokeColor: 'rgba(0, 0, 0, 0.5)',
-  buttonStrokeColor: 'rgba(0, 0, 0, 1)',
-  buttonFillColor: 'rgba(255, 255, 255, 1)',
-  strokeWidth: 2,
-  activeStrokeWidth: 3,
-  buttonStrokeWidth: 1.5,
-  handleWidth: 3,
-  iconSize: 20, // Can be 0 if you want to remove buttons (dblClick for (+) / rightClick for (-))
-  padding: 10,
-});
 
-fullScreenRenderer.setResizeCallback(({ width, height }) => {
-  widget.setSize(Math.min(450, width - 10), 150);
-});
 
-const piecewiseFunction = vtkPiecewiseFunction.newInstance();
-
-const actor = vtkVolume.newInstance();
-const mapper = vtkVolumeMapper.newInstance({ sampleDistance: 1.1 });
-const reader = vtkHttpDataSetReader.newInstance({ fetchGzip: true });
 
 reader.setUrl(urlToLoad).then(() => {
   reader.loadData().then(() => {
-    const imageData = reader.getOutputData();
-    const dataArray = imageData.getPointData().getScalars();
-    const dataRange = dataArray.getRange();
-    globalDataRange[0] = dataRange[0];
-    globalDataRange[1] = dataRange[1];
 
-    // Update Lookup table
-    changePreset();
 
     // // Automatic switch to next preset every 5s
     // if (!rootContainer) {
     //   intervalID = setInterval(changePreset, 5000);
     // }
 
-    widget.setDataArray(dataArray.getData());
-    widget.applyOpacity(piecewiseFunction);
 
-    widget.setColorTransferFunction(lookupTable);
-    lookupTable.onModified(() => {
-      widget.render();
-      renderWindow.render();
-    });
+
+    gaussianWidget.setColorTransferFunction(lookupTable);
+
 
     renderer.addVolume(actor);
     renderer.resetCamera();
-    renderer.getActiveCamera().elevation(70);
+    
     renderWindow.render();
   });
 });
@@ -558,41 +532,9 @@ reader.setUrl(urlToLoad).then(() => {
 actor.setMapper(mapper);
 mapper.setInputConnection(reader.getOutputPort());
 
-actor.getProperty().setRGBTransferFunction(0, lookupTable);
-actor.getProperty().setScalarOpacity(0, piecewiseFunction);
-actor.getProperty().setInterpolationTypeToFastLinear();
-
-// ----------------------------------------------------------------------------
-// Default setting Piecewise function widget
-// ----------------------------------------------------------------------------
-
-widget.addGaussian(0.425, 0.5, 0.2, 0.3, 0.2);
-widget.addGaussian(0.75, 1, 0.3, 0, 0);
-
-widget.setContainer(widgetContainer);
-widget.bindMouseListeners();
-
-widget.onAnimation((start) => {
-  if (start) {
-    renderWindow.getInteractor().requestAnimation(widget);
-  } else {
-    renderWindow.getInteractor().cancelAnimation(widget);
-  }
-});
-
-widget.onOpacityChange(() => {
-  widget.applyOpacity(piecewiseFunction);
-  if (!renderWindow.getInteractor().isAnimating()) {
-    renderWindow.render();
-  }
-});
 
 
-// ----------------------------------------------------------------------------
-// Expose variable to global namespace
-// ----------------------------------------------------------------------------
 
-  global.widget = widget;
   document.querySelector("#visualizechest").addEventListener("click", chest)
   document.querySelector("#visualizehead").addEventListener("click", Head)
   
@@ -609,9 +551,6 @@ document.body.innerHTML = `
       <td>
         <button id="visualizehead">Visualize Head</button>
       </td>
-      <td>
-        <button id="visualizegaussian">Transfer Function</button>
-      </td>
     </tr>
   </table>
 </div>
@@ -623,7 +562,6 @@ document.body.innerHTML = `
 
 document.querySelector("#visualizechest").addEventListener("click", chest)
 document.querySelector("#visualizehead").addEventListener("click", Head)
-document.querySelector("#visualizegaussian").addEventListener("click", Gaussian)
 
 
 
