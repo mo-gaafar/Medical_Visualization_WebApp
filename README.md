@@ -1,21 +1,28 @@
 # Medical_Visualization_WebApp
 This is a  Web GUI application that does 3D visualization of DICOM series Using VTK.js library.
 
-# Features
+| Team Members      |
+| ----------------- |
+| Mohamed Nasser    |
+| Ahmed Osama       |
+| Mariam Hanafy     |
+| Hassan Samy       |
 
-## Ray Casting Volume Rendering and Volume Cropping
+## Features
 
-[]!(./preview1.png)
+### Ray Casting Volume Rendering and Volume Cropping
 
-## Surface Rendering with adjustable ISO value
+<img src="./preview1.png" length ="600" width="600"/>
 
-[]!(./preview2.png)
+### Surface Rendering with adjustable ISO value
 
-# Video Preview
+<img src="./preview2.png" length ="600" width="600"/>
 
-[]!(./Animation.gif)
+## Video Preview
 
-# Issues we faced
+![](./Animation.gif)
+
+## Issues we faced
 
 1. Merging the examples together into one javascript file was challenging.
 2. Connecting the button to the different functions in the script to act as tabs
@@ -23,6 +30,3 @@ This is a  Web GUI application that does 3D visualization of DICOM series Using 
 4. Merging the transfer function into the cropping tab.
 5. Understanding the role of each object in the rendering pipeline. (actor, renderer, mapper, volume)
 
-# How we overcame the issues
-
-1. 

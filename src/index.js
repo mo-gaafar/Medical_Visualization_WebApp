@@ -34,12 +34,9 @@ document.body.innerHTML = ""
 const controlPanel=`<table>
 
   <tr> 
-    <td>  
-      <button id="visualizechest">Visualize Chest</button>
-    </td>
-    <td> 
-      <button id="visualizehead">Visualize Head</button>
-    </td>
+      <td>
+        <button id="visualizehead">Visualize Head</button>
+      </td>
   </tr> 
   <tr>
     <td>pickable</td>
@@ -422,9 +419,6 @@ actor.getProperty().setInterpolationTypeToFastLinear();
     <td>  
       <button id="visualizechest">Visualize Chest</button>
     </td>
-    <td> 
-      <button id="visualizehead">Visualize Head</button>
-    </td>
   </tr> 
   <tr>
     <td>Iso value</td>
@@ -483,61 +477,6 @@ reader
   })
 
    document.querySelector("#visualizechest").addEventListener("click", chest)
-}
-function Gaussian() {
-    document.body.innerHTML = ""
-  const controlPanel=`<table>
-
-  <tr> 
-    <td>  
-      <button id="visualizechest">Visualize Chest</button>
-    </td>
-    <td> 
-      <button id="visualizehead">Visualize Head</button>
-    </td>
-  </tr> 
-  <tr>
-  </tr>
-</table>`; 
-  
-
-// ----------------------------------------------------------------------------
-// Example code
-// ----------------------------------------------------------------------------
-
-
-
-
-reader.setUrl(urlToLoad).then(() => {
-  reader.loadData().then(() => {
-
-
-    // // Automatic switch to next preset every 5s
-    // if (!rootContainer) {
-    //   intervalID = setInterval(changePreset, 5000);
-    // }
-
-
-
-    gaussianWidget.setColorTransferFunction(lookupTable);
-
-
-    renderer.addVolume(actor);
-    renderer.resetCamera();
-    
-    renderWindow.render();
-  });
-});
-
-actor.setMapper(mapper);
-mapper.setInputConnection(reader.getOutputPort());
-
-
-
-
-  document.querySelector("#visualizechest").addEventListener("click", chest)
-  document.querySelector("#visualizehead").addEventListener("click", Head)
-  
 }
 
 document.body.style.backgroundColor = "#555555"
