@@ -20,15 +20,15 @@ This is a  Web GUI application that does 3D visualization of DICOM series Using 
 
 ### Ray Casting Volume Rendering and Volume Cropping
 
-<img src="./preview1.png" length ="600" width="600"/>
+![chest](./preview1.png)
 
 ### Surface Rendering with adjustable ISO value
 
-<img src="./preview2.png" length ="600" width="600"/>
+![skull](./preview2.png)
 
 ## Video Preview
 
-![](./Animation.gif)
+![animation](./Animation.gif)
 
 ## Issues we faced
 
