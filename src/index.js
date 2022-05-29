@@ -323,17 +323,22 @@ labelContainer.addEventListener('click', (event) => {
       widget.copyImageDataDescription(imageData);
       const cropState = widget.getWidgetState().getCroppingPlanes();
       cropState.onModified(() => {
-        const planes = getCroppingPlanes(imageData, cropState.getPlanes());
-        mapper.removeAllClippingPlanes();
+
+          const planes = getCroppingPlanes(imageData, cropState.getPlanes());
+          mapper.removeAllClippingPlanes();
+          
         planes.forEach((plane) => {
-          mapper.addClippingPlane(plane);
-        });
-        mapper.modified();
+              mapper.addClippingPlane(plane);
+          });
+            
+          mapper.modified();
+            
       });
-          lookupTable.onModified(() => {
-      gaussianWidget.render();
-      renderWindow.render();
-    });
+      gaussianWidget.setColorTransferFunction(lookupTable);
+      lookupTable.onModified(() => {
+          gaussianWidget.render();
+          renderWindow.render();
+      });
       
   
       // add volume to renderer
