@@ -224,7 +224,7 @@ const piecewiseFunction = vtkPiecewiseFunction.newInstance();
 // Create Widget container
 const widgetContainer = document.createElement('div');
 widgetContainer.style.position = 'absolute';
-widgetContainer.style.top = 'calc(10px + 80%)';
+widgetContainer.style.top = 'calc(10px + 75%)';
 widgetContainer.style.left = '5px';
   widgetContainer.style.background = 'rgba(255, 255, 255, 0.3)';
   widgetContainer.style.border = '3px solid #ccc';
