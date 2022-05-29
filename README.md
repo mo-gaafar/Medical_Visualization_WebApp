@@ -38,3 +38,15 @@ This is a  Web GUI application that does 3D visualization of DICOM series Using 
 4. Merging the transfer function into the cropping tab.
 5. Understanding the role of each object in the rendering pipeline. (actor, renderer, mapper, volume)
 
+## how we solved these problems 
+1. it was solved by making functions for each example in order to view them separately and later on these functions was
+connected to 2 separate tabs one for the chest example and the other for the head example.
+2. this issue was solved by using queryselector which returns the first element that matches the selectors id in our case it is the function of the 
+examples.
+3. we had to replace it multiple times when using old example so it could work.
+4. 
+5. Rendring is taking data and change it to 3D objects. 
+Actor used to represent an entity in a rendering scene.
+Mapper is to map points into the rendring scene.
+Volume similar to Actor, holds the property and mapper
+ 
